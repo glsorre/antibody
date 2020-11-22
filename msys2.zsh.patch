@@ -1,0 +1,50 @@
+diff --git a/bundle/zsh.go b/bundle/zsh.go
+index 85f05a1..832b425 100644
+--- a/bundle/zsh.go
++++ b/bundle/zsh.go
+@@ -4,6 +4,7 @@ import (
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
++	"runtime"
+ 	"strings"
+ 
+ 	"github.com/getantibody/antibody/project"
+@@ -39,6 +40,9 @@ func (bundle zshBundle) Get() (result string, err error) {
+ 			lines = append(lines, "source "+file)
+ 		}
+ 		lines = append(lines, fmt.Sprintf("fpath+=( %s )", bundle.Project.Path()))
++		if runtime.GOOS == "windows" {
++			return strings.ReplaceAll(strings.ReplaceAll(strings.Join(lines, "\n"), os.Getenv("CYGWIN_ROOT"), ""), "\\", "/"), err
++		}
+ 		return strings.Join(lines, "\n"), err
+ 	}
+ 
+diff --git a/shell/init.go b/shell/init.go
+index 0e0dbbd..ea64ae4 100644
+--- a/shell/init.go
++++ b/shell/init.go
+@@ -3,6 +3,7 @@ package shell
+ import (
+ 	"bytes"
+ 	"os"
++	"runtime"
+ 	"text/template"
+ )
+ 
+@@ -25,11 +26,14 @@ compctl -K _antibody antibody
+ `
+ 
+ // Init returns the shell that should be loaded to antibody to work correctly.
+-func Init() (string, error) {
++func Init() (string, error) { 
+ 	executable, err := os.Executable()
+ 	if err != nil {
+ 		return "", err
+ 	}
++	if runtime.GOOS == "windows" {
++		executable = os.Getenv("ANTIBODY_BIN")
++	}
+ 	var template = template.Must(template.New("init").Parse(tmpl))
+ 	var out bytes.Buffer
+ 	err = template.Execute(&out, executable)

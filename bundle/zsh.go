@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/getantibody/antibody/project"
@@ -39,6 +40,9 @@ func (bundle zshBundle) Get() (result string, err error) {
 			lines = append(lines, "source "+file)
 		}
 		lines = append(lines, fmt.Sprintf("fpath+=( %s )", bundle.Project.Path()))
+		if runtime.GOOS == "windows" {
+			return strings.ReplaceAll(strings.ReplaceAll(strings.Join(lines, "\n"), os.Getenv("CYGWIN_ROOT"), ""), "\\", "/"), err
+		}
 		return strings.Join(lines, "\n"), err
 	}
 

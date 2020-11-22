@@ -3,6 +3,7 @@ package shell
 import (
 	"bytes"
 	"os"
+	"runtime"
 	"text/template"
 )
 
@@ -25,10 +26,13 @@ compctl -K _antibody antibody
 `
 
 // Init returns the shell that should be loaded to antibody to work correctly.
-func Init() (string, error) {
+func Init() (string, error) { 
 	executable, err := os.Executable()
 	if err != nil {
 		return "", err
+	}
+	if runtime.GOOS == "windows" {
+		executable = os.Getenv("ANTIBODY_BIN")
 	}
 	var template = template.Must(template.New("init").Parse(tmpl))
 	var out bytes.Buffer
